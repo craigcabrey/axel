@@ -103,8 +103,28 @@ def move_movie(path, guess, move=True):
         else:
             shutil.copyfile(path, destination_path)
     else:
-        # TODO: Use filebot to auto rename
-        pass
+        action = 'move' if move else 'copy'
+
+        command = [
+            filebot_bin,
+            '--action',
+            action,
+            '--db',
+            'TheMovieDB',
+            '--format',
+            '{n} ({y})/{n} ({y}) - {vf}',
+            '-non-strict',
+            '-unixfs',
+            '-rename',
+            path,
+            '--output',
+            movie_dir
+        ]
+
+        result = subprocess.run(command)
+
+        if result.returncode != 0:
+            pb_notify('Failed to rename {0} using filebot'.format(path))
 
 
 def move_episode(path, guess, move=True):
@@ -138,10 +158,7 @@ def move_episode(path, guess, move=True):
         else:
             shutil.copyfile(path, destination_path)
     else:
-        if move:
-            action = 'move'
-        else:
-            action = 'copy'
+        action = 'move' if move else 'copy'
 
         command = [
             filebot_bin,
@@ -208,12 +225,15 @@ def handle_manual(torrent):
         file_path = os.path.join(torrent.downloadDir, file['name'])
         if file_path.endswith('mkv') and 'sample' not in file_path.lower():
             # Log and ignore mkv files of less than ~92MiB
-            if os.path.getsize(file_path) >= 96811278:
-                handle_media(file_path, False)
-            else:
-                syslog.syslog(
-                    syslog.LOG_ERR, 'Detected false media file, skipping'
-                )
+            try:
+                if os.path.getsize(file_path) >= 96811278:
+                    handle_media(file_path, False)
+                else:
+                    syslog.syslog(
+                        syslog.LOG_ERR, 'Detected false media file, skipping'
+                    )
+            except FileNotFoundError:
+                syslog.syslog(syslog.LOG_ERR, 'Torrent file missing, skipping')
         elif file_path.endswith('rar'):
             # Ignore parts beyond the first in a rar series
             match = part_regex.match(file_path)
