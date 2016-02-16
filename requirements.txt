@@ -1,0 +1,4 @@
+guessit==2.0.3
+pushbullet.py==0.10.0
+transmissionrpc==0.11
+unrar==0.3
