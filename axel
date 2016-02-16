@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+
+import configparser
+import guessit
+import os
+import pushbullet
+import re
+import shutil
+import subprocess
+import sys
+import syslog
+import tempfile
+import textwrap
+import transmissionrpc
+import unrar.rarfile
+import unrar.unrarlib
+
+config = configparser.ConfigParser()
+config.read('/etc/axel.conf')
+
+filebot_bin = config.get('General', 'FilebotLocation', fallback='/usr/bin/filebot')
+pushbullet_key = config.get('General', 'PushbulletKey', fallback='')
+transmission_host = config.get('Transmission', 'Host', fallback='localhost')
+transmission_port = config.get('Transmission', 'Port', fallback=9091)
+
+movie_dir = config.get('Media', 'MovieDirectory')
+tv_dir = config.get('Media', 'TVDirectory')
+
+couchpotato_category = config.get('CouchPotato', 'Category', fallback='couchpotato')
+ignore_couchpotato = config.getboolean('CouchPotato', 'Ignore')
+sonarr_category = config.get('Sonarr', 'Category', fallback='sonarr')
+ignore_sonarr = config.getboolean('Sonarr', 'Ignore')
+drone_factory = config.get('Sonarr', 'DroneFactory')
+
+whitelist = config.get('Transmission', 'Whitelist', fallback='').split(',')
+
+pushbullet_client = None
+
+def whitelisted(torrent):
+    for tracker in torrent.trackers:
+        for host in whitelist:
+            if host in tracker['announce']:
+                return True
+    return False
+
+
+def extract(path, destination):
+    if unrar.rarfile.is_rarfile(path):
+        try:
+            rar = unrar.rarfile.RarFile(path)
+            if not rar.testrar():
+                # Use a set to prevent duplicates from infolist()
+                paths = set()
+                for member in rar.infolist():
+                    if member.filename.endswith('mkv'):
+                        paths.add(rar.extract(member, path=destination))
+                return paths
+            else:
+                pb_notify('{0} failed the rar integrity check'.format(path))
+        except unrar.unrarlib.UnrarException:
+            pb_notify('Error while opening {0}'.format(path))
+    return False
+
+
+prev_message = None
+def pb_notify(message):
+    global pushbullet_client
+    global prev_message
+
+    # Prevent spamming runaway messages
+    if prev_message == message:
+        return
+
+    if not pushbullet_client and pushbullet_key:
+        pushbullet_client = pushbullet.Pushbullet(pushbullet_key)
+
+    if pushbullet_client:
+        pushbullet_client.push_note('Axel', message)
+        prev_message = message
+
+
+def move_movie(path, guess, move=True):
+    required_keys = ('title', 'year', 'screen_size', 'container')
+    if all(key in guess for key in required_keys):
+        dir_name = '{0} ({1})'.format(guess['title'], guess['year'])
+        movie_dir_path = os.path.join(movie_dir, dir_name)
+
+        if not os.path.exists(movie_dir_path):
+            os.mkdir(movie_dir_path)
+
+        destination_path = os.path.join(
+            movie_path_dir,
+            '{title} ({year}) - {size}.{container}'.format(
+                title=guess['title'],
+                year=guess['year'],
+                size=guess['screen_size'],
+                container=guess['container']
+            )
+        )
+
+        if move:
+            shutil.move(path, destination_path)
+        else:
+            shutil.copyfile(path, destination_path)
+    else:
+        # TODO: Use filebot to auto rename
+        pass
+
+
+def move_episode(path, guess, move=True):
+    required_keys = ('title', 'season', 'episode', 'episode_title', 'container')
+    if all(key in guess for key in required_keys):
+        tv_show_path = os.path.join(tv_dir, guess['title'])
+
+        if not os.path.exists(tv_show_path):
+            os.mkdir(tv_show_path)
+
+        season = 'Season {0}'.format(guess['season'])
+        season_path = os.path.join(tv_show_path, season)
+
+        if not os.path.exists(season_path):
+            os.mkdir(season_path)
+
+        destination_path = os.path.join(
+            season_path,
+            '{title} - s{season}e{episode} - {episode_title}.{container}'
+                .format(
+                    title=guess['title'],
+                    season=str(guess['season']).zfill(2),
+                    episode=str(guess['episode']).zfill(2),
+                    episode_title=guess['episode_title'],
+                    container=guess['container']
+                )
+        )
+
+        if move:
+            shutil.move(path, destination_path)
+        else:
+            shutil.copyfile(path, destination_path)
+    else:
+        if move:
+            action = 'move'
+        else:
+            action = 'copy'
+
+        command = [
+            filebot_bin,
+            '--action',
+            action,
+            '--db',
+            'TheTVDB',
+            '--format',
+            '{n}/Season {s}/{n} - {s00e00} - {t}',
+            '-non-strict',
+            '-unixfs',
+            '-rename',
+            path,
+            '--output',
+            tv_dir
+        ]
+
+        result = subprocess.run(command)
+
+        if result.returncode != 0:
+            pb_notify('Failed to rename {0} using filebot'.format(path))
+
+
+def handle_sonarr(torrent):
+    for index, file in torrent.files().items():
+        file_path = os.path.join(torrent.downloadDir, file['name'])
+        if file_path.endswith('rar'):
+            download_dir = os.path.dirname(file_path)
+            paths = extract(file_path, download_dir)
+
+            if paths:
+                pb_notify(
+                    'Successfully unpacked rar archive: {0}'.format(file_path)
+                )
+
+                # Move extracted files to sonarr drone factory
+                for path in paths:
+                    shutil.chown(path, group='plex')
+                    os.chmod(path, 0o664)
+                    shutil.move(path, drone_factory)
+            else:
+                pb_notify(
+                    'Failed to unpacked rar archive: {0}'.format(path)
+                )
+
+
+def handle_manual(torrent):
+    auto_processed = False
+
+    def handle_media(path, move):
+        nonlocal auto_processed
+
+        guess = guessit.guessit(path)
+
+        if guess['type'] == 'episode':
+            move_episode(path, guess, move)
+            auto_processed = True
+        elif guess['type'] == 'movie':
+            move_movie(path, guess, move)
+            auto_processed = True
+
+    part_regex = re.compile('.*part(\d).rar', re.IGNORECASE)
+    for index, file in torrent.files().items():
+        file_path = os.path.join(torrent.downloadDir, file['name'])
+        if file_path.endswith('mkv') and 'sample' not in file_path.lower():
+            # Log and ignore mkv files of less than ~92MiB
+            if os.path.getsize(file_path) >= 96811278:
+                handle_media(file_path, False)
+            else:
+                syslog.syslog(
+                    syslog.LOG_ERR, 'Detected false media file, skipping'
+                )
+        elif file_path.endswith('rar'):
+            # Ignore parts beyond the first in a rar series
+            match = part_regex.match(file_path)
+            if match and match.group(1) > 1:
+                continue
+
+            with tempfile.TemporaryDirectory() as temp_dir:
+                paths = extract(file_path, temp_dir)
+
+                if paths:
+                    for path in paths:
+                        shutil.chown(path, group='plex')
+                        os.chmod(path, 0o664)
+
+                        handle_media(path, True)
+
+    if auto_processed:
+        pb_notify(
+            textwrap.dedent(
+                '''
+                    Manually added torrent {0} finished downloading
+                    and was auto-processed
+                '''.format(torrent.name)
+            ).strip()
+        )
+    else:
+        pb_notify(
+            'Manually added torrent {0} finished downloading'.format(
+                torrent.name
+            )
+        )
+
+
+def main():
+    torrent_id = os.environ['TR_TORRENT_ID']
+    syslog.syslog('Beginning processing of torrent {0}'.format(torrent_id))
+
+    transmission_client = transmissionrpc.Client(
+        transmission_host, port=transmission_port
+    )
+    torrent = transmission_client.get_torrent(torrent_id)
+
+    # Make sure transmission called us with a completed torrent
+    if torrent.progress != 100.0:
+        syslog.syslog(syslog.LOG_ERR, 'Called with an incomplete torrent')
+        sys.exit(1)
+
+    if couchpotato_category in torrent.downloadDir:
+        if not ignore_couchpotato:
+            # TODO
+            pass
+    elif sonarr_category in torrent.downloadDir:
+        if not ignore_sonarr:
+            handle_sonarr(torrent)
+    else:
+        handle_manual(torrent)
+
+    # Immediately remove torrents that are not whitelisted (by tracker)
+    if not whitelisted(torrent):
+        transmission_client.remove_torrent(torrent_id)
+        pb_notify('Removed non-whitelisted torrent {0}'.format(torrent.name))
+
+if __name__ == '__main__':
+    main()

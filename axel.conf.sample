@@ -1,0 +1,23 @@
+[General]
+FilebotLocation=
+PushbulletKey=
+
+[Media]
+# Required
+MovieDirectory=
+# Required
+TVDirectory=
+
+[CouchPotato]
+Category=couchpotato
+Ignore=yes
+
+[Sonarr]
+Category=sonarr
+DroneFactory=
+Ignore=no
+
+[Transmission]
+Host=localhost
+Port=9091
+Whitelist=
