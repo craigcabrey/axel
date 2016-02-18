@@ -121,10 +121,12 @@ def move_movie(path, guess, move=True):
             movie_dir
         ]
 
-        result = subprocess.run(command)
+        result = subprocess.run(command, stdout=subprocess.PIPE)
 
         if result.returncode != 0:
             pb_notify('Failed to rename {0} using filebot'.format(path))
+        elif b'Skipped' in result.stdout and b'already exists' in result.stdout:
+            pb_notify('Filebot skipped {0}: already exists'.format(path))
 
 
 def move_episode(path, guess, move=True):
@@ -176,10 +178,12 @@ def move_episode(path, guess, move=True):
             tv_dir
         ]
 
-        result = subprocess.run(command)
+        result = subprocess.run(command, stdout=subprocess.PIPE)
 
         if result.returncode != 0:
             pb_notify('Failed to rename {0} using filebot'.format(path))
+        elif b'Skipped' in result.stdout and b'already exists' in result.stdout:
+            pb_notify('Filebot skipped {0}: already exists'.format(path))
 
 
 def handle_sonarr(torrent):
@@ -200,9 +204,7 @@ def handle_sonarr(torrent):
                     os.chmod(path, 0o664)
                     shutil.move(path, drone_factory)
             else:
-                pb_notify(
-                    'Failed to unpacked rar archive: {0}'.format(path)
-                )
+                pb_notify('Failed to unpacked rar archive: {0}'.format(path))
 
 
 def handle_manual(torrent):
