@@ -1,0 +1,9 @@
+[Unit]
+Description=Update transmission blocklist
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/axelctl --update-blocklist
+
+[Install]
+WantedBy=multiuser.target

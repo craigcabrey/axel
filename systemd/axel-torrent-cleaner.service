@@ -1,0 +1,9 @@
+[Unit]
+Description=Clean old torrents from transmission
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/axelctl --clean
+
+[Install]
+WantedBy=multiuser.target
