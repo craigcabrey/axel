@@ -1,8 +1,6 @@
 [General]
 FilebotLocation=
 PushbulletKey=
-
-[Media]
 # Required
 MovieDirectory=
 # Required
@@ -21,3 +19,6 @@ Ignore=no
 Host=localhost
 Port=9091
 Whitelist=
+# Time in days
+TimeThreshold=14
+RatioThreshold=2

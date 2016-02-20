@@ -25,7 +25,7 @@ occur during processing.
 ## Getting Started
 
 First, install the dependencies required to run:
-`pip install -r requirements.txt`.
+`python3 setup.py install`.
 
 Next, copy the provided configuration file to `/etc/axel.conf` and update the
 indicated values with appropriate information.
@@ -37,7 +37,7 @@ script:
 {
   [...]
   "script-torrent-done-enabled": true,
-  "script-torrent-done-filename": "/usr/local/bin/axel",
+  "script-torrent-done-filename": "/usr/bin/axelctl",
   [...]
 }
 ```

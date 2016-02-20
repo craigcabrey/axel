@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-
-import configparser
 import guessit
 import os
 import pushbullet
@@ -15,26 +12,26 @@ import transmissionrpc
 import unrar.rarfile
 import unrar.unrarlib
 
-config = configparser.ConfigParser()
-config.read('/etc/axel.conf')
+from axel import config
 
-filebot_bin = config.get('General', 'FilebotLocation', fallback='/usr/bin/filebot')
-pushbullet_key = config.get('General', 'PushbulletKey', fallback='')
-transmission_host = config.get('Transmission', 'Host', fallback='localhost')
-transmission_port = config.get('Transmission', 'Port', fallback=9091)
+filebot_bin = config['filebot_bin']
+pushbullet_key = config['pushbullet_key']
+movie_dir = config['movie_dir']
+tv_dir = config['tv_dir']
 
-movie_dir = config.get('Media', 'MovieDirectory')
-tv_dir = config.get('Media', 'TVDirectory')
+transmission_host = config['transmission']['host']
+transmission_port = config['transmission']['port']
+whitelist = config['transmission']['whitelist']
 
-couchpotato_category = config.get('CouchPotato', 'Category', fallback='couchpotato')
-ignore_couchpotato = config.getboolean('CouchPotato', 'Ignore')
-sonarr_category = config.get('Sonarr', 'Category', fallback='sonarr')
-ignore_sonarr = config.getboolean('Sonarr', 'Ignore')
-drone_factory = config.get('Sonarr', 'DroneFactory')
+couchpotato_category = config['couchpotato']['category']
+ignore_couchpotato = config['couchpotato']['ignore']
 
-whitelist = config.get('Transmission', 'Whitelist', fallback='').split(',')
+sonarr_category = config['sonarr']['category']
+ignore_sonarr = config['sonarr']['ignore']
+drone_factory = config['sonarr']['drone_factory']
 
 pushbullet_client = None
+
 
 def whitelisted(torrent):
     for tracker in torrent.trackers:
@@ -42,6 +39,13 @@ def whitelisted(torrent):
             if host in tracker['announce']:
                 return True
     return False
+
+
+def update_blocklist():
+    transmission_client = transmissionrpc.Client(
+        transmission_host, port=transmission_port
+    )
+    transmission_client.blocklist_update()
 
 
 def extract(path, destination):
@@ -269,7 +273,7 @@ def handle_manual(torrent):
         )
 
 
-def main():
+def handle_finished_download():
     torrent_id = os.environ['TR_TORRENT_ID']
     syslog.syslog('Beginning processing of torrent {0}'.format(torrent_id))
 
@@ -297,6 +301,3 @@ def main():
     if not whitelisted(torrent):
         transmission_client.remove_torrent(torrent_id)
         pb_notify('Removed non-whitelisted torrent {0}'.format(torrent.name))
-
-if __name__ == '__main__':
-    main()

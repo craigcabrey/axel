@@ -1,0 +1,51 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+import textwrap
+
+import axel
+
+
+def process_arguments():
+    parser = argparse.ArgumentParser('''
+        Axel is a system to automate the management
+        of torrent downloads and post processing.
+    ''')
+
+    parser.add_argument(
+        '--clean',
+        action='store_true',
+        help='''
+            Remove finished downloads older than the
+            configured time frame
+        '''
+    )
+
+    parser.add_argument(
+        '--update-blocklist',
+        action='store_true',
+        help='Update the configured blocklist'
+    )
+
+    return parser.parse_args()
+
+
+def main():
+    config = process_arguments()
+
+    if config.clean:
+        axel.clean()
+
+    if config.update_blocklist:
+        axel.update_blocklist()
+
+    if 'TR_TORRENT_ID' in os.environ:
+        axel.handle_finished_download()
+    elif not config.clean and not config.update_blocklist:
+        print('Please set `axelctl\' as ' +
+              'your Transmission post download script.')
+
+if __name__ == '__main__':
+    main()
