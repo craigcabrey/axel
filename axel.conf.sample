@@ -1,6 +1,7 @@
 [General]
 FilebotLocation=
 PushbulletKey=
+PushbulletChannel=
 # Required
 MovieDirectory=
 # Required

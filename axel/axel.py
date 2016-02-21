@@ -1,6 +1,5 @@
 import guessit
 import os
-import pushbullet
 import re
 import shutil
 import subprocess
@@ -13,9 +12,9 @@ import unrar.rarfile
 import unrar.unrarlib
 
 from axel import config
+from axel import pb_notify
 
 filebot_bin = config['filebot_bin']
-pushbullet_key = config['pushbullet_key']
 movie_dir = config['movie_dir']
 tv_dir = config['tv_dir']
 
@@ -29,8 +28,6 @@ ignore_couchpotato = config['couchpotato']['ignore']
 sonarr_category = config['sonarr']['category']
 ignore_sonarr = config['sonarr']['ignore']
 drone_factory = config['sonarr']['drone_factory']
-
-pushbullet_client = None
 
 
 def whitelisted(torrent):
@@ -64,23 +61,6 @@ def extract(path, destination):
         except unrar.unrarlib.UnrarException:
             pb_notify('Error while opening {0}'.format(path))
     return False
-
-
-prev_message = None
-def pb_notify(message):
-    global pushbullet_client
-    global prev_message
-
-    # Prevent spamming runaway messages
-    if prev_message == message:
-        return
-
-    if not pushbullet_client and pushbullet_key:
-        pushbullet_client = pushbullet.Pushbullet(pushbullet_key)
-
-    if pushbullet_client:
-        pushbullet_client.push_note('Axel', message)
-        prev_message = message
 
 
 def move_movie(path, guess, move=True):

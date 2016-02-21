@@ -1,4 +1,5 @@
 import configparser
+import pushbullet
 
 parser = configparser.ConfigParser()
 parser.read('/etc/axel.conf')
@@ -10,6 +11,9 @@ config['filebot_bin'] = parser.get(
 )
 config['pushbullet_key'] = parser.get(
     'General', 'PushbulletKey', fallback=''
+)
+config['pushbullet_channel'] = parser.get(
+    'General', 'PushbulletChannel', fallback=''
 )
 config['movie_dir'] = parser.get(
     'General', 'MovieDirectory'
@@ -47,6 +51,33 @@ config['sonarr']['category'] = parser.get(
 )
 config['sonarr']['ignore'] = parser.getboolean('Sonarr', 'Ignore')
 config['sonarr']['drone_factory'] = parser.get('Sonarr', 'DroneFactory')
+
+pushbullet_client = None
+sender = None
+
+if not pushbullet_client and config['pushbullet_key']:
+    pushbullet_client = pushbullet.Pushbullet(config['pushbullet_key'])
+
+if config['pushbullet_channel']:
+    for channel in pushbullet_client.channels:
+        if channel.name == config['pushbullet_channel']:
+            sender = channel
+    if not sender:
+        raise RuntimeError('Could not find specified Pushbullet channel')
+else:
+    sender = pushbullet_client
+
+prev_message = None
+def pb_notify(message):
+    global prev_message
+
+    # Prevent spamming runaway messages
+    if prev_message == message:
+        return
+
+    if sender:
+        sender.push_note('Axel', message)
+        prev_message = message
 
 from .axel import update_blocklist, handle_finished_download
 from .cleaner import clean
