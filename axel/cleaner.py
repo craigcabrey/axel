@@ -16,12 +16,11 @@ def clean():
 
     time_threshold = config['transmission']['time_threshold']
     for torrent in torrents:
-        if torrent.status == 'seeding':
+        if torrent.status in ('seeding', 'stopped'):
             done = torrent.date_done
             diff = now - done
 
             if diff.days >= time_threshold:
-                # TODO: Use pb_notify instead
                 pb_notify(
                     textwrap.dedent(
                         '''
