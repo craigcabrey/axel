@@ -46,6 +46,7 @@ def main():
     elif not config.clean and not config.update_blocklist:
         print('Please set `axelctl\' as ' +
               'your Transmission post download script.')
+        sys.exit(1)
 
 if __name__ == '__main__':
     main()

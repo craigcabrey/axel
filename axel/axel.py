@@ -93,7 +93,7 @@ def move_movie(path, guess, move=True):
             os.mkdir(movie_dir_path)
 
         destination_path = os.path.join(
-            movie_path_dir,
+            movie_dir_path,
             '{title} ({year}) - {size}.{container}'.format(
                 title=guess['title'],
                 year=guess['year'],
