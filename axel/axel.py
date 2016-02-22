@@ -31,11 +31,11 @@ drone_factory = config['sonarr']['drone_factory']
 
 
 def whitelisted(torrent):
-    for tracker in torrent.trackers:
-        for host in whitelist:
-            if host in tracker['announce']:
-                return True
-    return False
+    return any(
+        host in tracker['annount']
+            for host in whitelist
+                for tracker in torrent.trackers
+    )
 
 
 def update_blocklist():

@@ -21,6 +21,9 @@ config['movie_dir'] = parser.get(
 config['tv_dir'] = parser.get(
     'General', 'TVDirectory'
 )
+config['tmdb_api_key'] = parser.get(
+    'General', 'TheMovieDBAPIKey', fallback=''
+)
 
 config['transmission'] = {}
 config['transmission']['host'] = parser.get(
@@ -79,6 +82,7 @@ def pb_notify(message):
         sender.push_note('Axel', message)
         prev_message = message
 
+from .auditor import audit
 from .axel import update_blocklist, handle_finished_download
 from .cleaner import clean
 

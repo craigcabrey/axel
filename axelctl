@@ -15,6 +15,15 @@ def process_arguments():
     ''')
 
     parser.add_argument(
+        '--audit',
+        choices=('movies', 'tv', 'all'),
+        help='''
+            Check existing media directories for naming
+            consistencies and repair if necessary
+        '''
+    )
+
+    parser.add_argument(
         '--clean',
         action='store_true',
         help='''
@@ -34,6 +43,10 @@ def process_arguments():
 
 def main():
     config = process_arguments()
+
+    if config.audit:
+        axel.audit(config.audit)
+        return
 
     if config.clean:
         axel.clean()

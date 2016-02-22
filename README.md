@@ -20,7 +20,8 @@ This system is intended to work with the following:
 * Linux/BSD
 
 Pushbullet is a available as an optional mechanism to notify of events that
-occur during processing.
+occur during processing. If you wish to use a specific channel when notifying,
+specify it in the configuration.
 
 ## Getting Started
 

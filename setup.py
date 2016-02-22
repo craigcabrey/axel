@@ -13,11 +13,12 @@ setuptools.setup(
     py_modules=['axel'],
     scripts=['axelctl'],
     install_requires=[
-		'guessit>=0.1.12',
-		'pushbullet.py>=0.10.0',
-		'transmissionrpc>=0.11',
-		'unrar>=0.3'
-	],
+        'guessit>=0.1.12',
+        'pushbullet.py>=0.10.0',
+        'tmdbsimple>=1.3.0',
+        'transmissionrpc>=0.11',
+        'unrar>=0.3'
+    ],
     long_description=open('README.md').read(),
     packages=['axel'],
     package_dir={
