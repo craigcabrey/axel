@@ -1,6 +1,7 @@
 [General]
 # Leave blank if filebot is in $PATH
 FilebotLocation=
+MediainfoLocation=
 # Leave blank to disable Pushbullet
 PushbulletKey=
 # Optional

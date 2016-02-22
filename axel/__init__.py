@@ -11,6 +11,9 @@ config = {}
 config['filebot_bin'] = parser.get(
     'General', 'FilebotLocation', fallback=lambda: shutil.which('filebot')
 )
+config['mediainfo_bin'] = parser.get(
+    'General', 'MediaInfoLocation', fallback=lambda: shutil.which('mediainfo')
+)
 config['pushbullet_key'] = parser.get(
     'General', 'PushbulletKey', fallback=''
 )
