@@ -1,6 +1,9 @@
 [General]
+# Leave blank if filebot is in $PATH
 FilebotLocation=
+# Leave blank to disable Pushbullet
 PushbulletKey=
+# Optional
 PushbulletChannel=
 # Required
 MovieDirectory=
@@ -19,6 +22,7 @@ Ignore=no
 [Transmission]
 Host=localhost
 Port=9091
+# Comma separate list of hostnames
 Whitelist=
 # Time in days
 TimeThreshold=14

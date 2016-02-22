@@ -1,4 +1,6 @@
 import configparser
+import shutil
+
 import pushbullet
 
 parser = configparser.ConfigParser()
@@ -7,7 +9,7 @@ parser.read('/etc/axel.conf')
 config = {}
 
 config['filebot_bin'] = parser.get(
-    'General', 'FilebotLocation', fallback='/usr/bin/filebot'
+    'General', 'FilebotLocation', fallback=lambda: shutil.which('filebot')
 )
 config['pushbullet_key'] = parser.get(
     'General', 'PushbulletKey', fallback=''
