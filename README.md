@@ -1,6 +1,6 @@
 # axel
 
-Automated media handling, placement, and organization.
+Opinionated automation of media handling, placement, and organization.
 
 ## About
 
@@ -13,6 +13,7 @@ This system is intended to work with the following:
 
 * libunrar
 * filebot
+* mediainfo
 * Python 3.5+
 * Sonarr
 * CouchPotato
@@ -42,6 +43,30 @@ script:
   [...]
 }
 ```
+
+## Naming Conventions
+
+`axel` follows Plex naming conventions wherever possible. This is not
+configurable.
+
+Movies:
+
+`{root}/{Title} ({Year})/{Title} - ({Year}) - {Quality}.{ext}`
+
+TV Shows:
+
+`{root}/{Title}/Season {Season No}/{Title} - S{Season No}E{Episode No} - {Episode Name}.{ext}`
+
+There is an audit feature to assist you with migrating existing media to the
+convention:
+
+`axelctl --audit movies`
+
+This is an interactive process that involves querying
+[The Movie DB](https://www.themoviedb.org/), which means you need to obtain an
+API key from them.
+
+TV Show auditing support is coming soon.
 
 ## Troubleshooting
 

@@ -2,6 +2,7 @@ import os
 import re
 import subprocess
 
+import guessit
 import tmdbsimple as tmdb
 
 from axel import config
@@ -25,8 +26,11 @@ def search_tmdb(query):
         while True:
             try:
                 choice = int(input('> '))
-                if choice:
+                # Need to compare to None explicitly since choice can be 0
+                if choice is not None:
                     selection = search.results[choice]
+                else:
+                    print('Skipping...')
             except IndexError:
                 print('Invalid selection')
             except ValueError:
@@ -75,7 +79,7 @@ def audit(mode):
 
 
 movie_format = re.compile(
-    '(?P<name>(?P<title>.+) \(\d{4}\) ?- (?P<quality>1080p|720p))\.(?P<ext>.+)'
+    '(?P<name>(?P<title>.+) \(\d{4}\) ?- (?P<quality>\d{3,4})p)\.(?P<ext>.+)'
 )
 movie_dir_format = re.compile('.+ \(\d{4}\)', re.IGNORECASE)
 def audit_movies():
@@ -115,7 +119,7 @@ def audit_movies():
 
                 match = movie_format.match(entry)
                 if match:
-                    if match.group('quality') != '1080p':
+                    if match.group('quality') != '1080':
                         print(
                             '==> WARNING: non-1080p detected: {0}'.format(
                                 entry
@@ -123,23 +127,19 @@ def audit_movies():
                         )
                 else:
                     print('==> {0} does not match, searching...'.format(entry))
-                    # Let's just assume the extension is 3 characters
-                    query = entry[:-4]
-                    query = query.replace('1080p', '')
-                    query = query.replace('720p', '')
-                    query = query.replace('.', ' ')
 
-                    selection = search_tmdb(query)
+                    guess = guessit.guessit(entry)
+                    selection = search_tmdb(guess['title'])
 
                     if selection:
                         quality = determine_quality(source_path)
                         if quality:
-                            name_format = '{name ({year}) - {quality}.{ext}'
+                            name_format = '{name} ({year}) - {quality}.{ext}'
                             new_name = name_format.format(
                                 name=selection['title'],
                                 year=str(selection['release_date'][:4]),
                                 quality=quality,
-                                ext=entry[-3:]
+                                ext=guess['container']
                             )
                             dest_path = os.path.join(movie_dir, new_name)
 
