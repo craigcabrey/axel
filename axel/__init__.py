@@ -88,10 +88,13 @@ def pb_notify(message):
         prev_message = message
 
 from .auditor import audit
-from .axel import update_blocklist, handle_finished_download
 from .cleaner import clean
+from .core import update_blocklist, handle_finished_download
 
-del axel
+del auditor
 del cleaner
 del configparser
+del core
 del parser
+del pushbullet
+del shutil
