@@ -79,7 +79,7 @@ def audit(mode):
 
 
 movie_format = re.compile(
-    '(?P<name>(?P<title>.+) \(\d{4}\) ?- (?P<quality>\d{3,4})p)\.(?P<ext>.+)'
+    '(?P<name>(?P<title>.+) \(\d{4}\) ?- (?P<quality>\d{3,4}p))\.(?P<ext>.+)'
 )
 movie_dir_format = re.compile('.+ \(\d{4}\)', re.IGNORECASE)
 def audit_movies():
@@ -119,11 +119,16 @@ def audit_movies():
 
                 match = movie_format.match(entry)
                 if match:
-                    if match.group('quality') != '1080':
+                    quality = determine_quality(source_path)
+                    if match.group('quality') != quality:
                         print(
-                            '==> WARNING: non-1080p detected: {0}'.format(
-                                entry
-                            )
+                            '==> WARNING: actual quality does not match ' +
+                            'filename: {0}'.format(entry)
+                        )
+                    if match.group('quality') != '1080p':
+                        print(
+                            '==> WARNING: non-1080p detected: ' +
+                            '{0}'.format(entry)
                         )
                 else:
                     print('==> {0} does not match, searching...'.format(entry))
