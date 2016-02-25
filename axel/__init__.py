@@ -1,8 +1,6 @@
 import configparser
 import shutil
 
-import pushbullet
-
 parser = configparser.ConfigParser()
 parser.read('/etc/axel.conf')
 
@@ -60,33 +58,6 @@ config['sonarr']['category'] = parser.get(
 config['sonarr']['ignore'] = parser.getboolean('Sonarr', 'Ignore')
 config['sonarr']['drone_factory'] = parser.get('Sonarr', 'DroneFactory')
 
-pushbullet_client = None
-sender = None
-
-if not pushbullet_client and config['pushbullet_key']:
-    pushbullet_client = pushbullet.Pushbullet(config['pushbullet_key'])
-
-if config['pushbullet_channel']:
-    for channel in pushbullet_client.channels:
-        if channel.name == config['pushbullet_channel']:
-            sender = channel
-    if not sender:
-        raise RuntimeError('Could not find specified Pushbullet channel')
-else:
-    sender = pushbullet_client
-
-prev_message = None
-def pb_notify(message):
-    global prev_message
-
-    # Prevent spamming runaway messages
-    if prev_message == message:
-        return
-
-    if sender:
-        sender.push_note('Axel', message)
-        prev_message = message
-
 from .auditor import audit
 from .cleaner import clean
 from .core import update_blocklist, handle_finished_download
@@ -96,5 +67,4 @@ del cleaner
 del configparser
 del core
 del parser
-del pushbullet
 del shutil

@@ -12,7 +12,8 @@ import unrar.rarfile
 import unrar.unrarlib
 
 from axel import config
-from axel import pb_notify
+from axel.util import pb_notify
+from axel.util import check_extension
 
 filebot_bin = config['filebot_bin']
 movie_dir = config['movie_dir']
@@ -53,7 +54,7 @@ def extract(path, destination):
                 # Use a set to prevent duplicates from infolist()
                 paths = set()
                 for member in rar.infolist():
-                    if member.filename.endswith('mkv'):
+                    if check_extension(member.filename):
                         paths.add(rar.extract(member, path=destination))
                 return paths
             else:
@@ -209,7 +210,7 @@ def handle_manual(torrent):
     part_regex = re.compile('.*part(\d+).rar', re.IGNORECASE)
     for index, file in torrent.files().items():
         file_path = os.path.join(torrent.downloadDir, file['name'])
-        if file_path.endswith('mkv') and 'sample' not in file_path.lower():
+        if check_extension(file_path) and 'sample' not in file_path.lower():
             # Log and ignore mkv files of less than ~92MiB
             try:
                 if os.path.getsize(file_path) >= 96811278:

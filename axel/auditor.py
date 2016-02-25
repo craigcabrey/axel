@@ -6,6 +6,7 @@ import guessit
 import tmdbsimple as tmdb
 
 from axel import config
+from axel.util import log
 
 
 def search_tmdb(query):
@@ -38,7 +39,7 @@ def search_tmdb(query):
             else:
                 break
     else:
-        print('==> No matches found (searched for "{0}")'.format(query))
+        log('No matches found (searched for "{0}")'.format(query))
 
     return selection
 
@@ -90,7 +91,7 @@ def audit_movies():
 
             # Check the conformance of the movie dir naming itself
             if not movie_dir_format.match(movie):
-                print('==> "{0}" does not match, searching...'.format(movie))
+                log('"{0}" does not match, searching...'.format(movie))
 
                 selection = search_tmdb(movie)
 
@@ -121,17 +122,18 @@ def audit_movies():
                 if match:
                     quality = determine_quality(source_path)
                     if match.group('quality') != quality:
-                        print(
-                            '==> WARNING: actual quality does not match ' +
-                            'filename: {0}'.format(entry)
+                        log(
+                            'actual quality does not match filename: ' +
+                            '{0}'.format(entry),
+                            level='warn'
                         )
                     if match.group('quality') != '1080p':
-                        print(
-                            '==> WARNING: non-1080p detected: ' +
-                            '{0}'.format(entry)
+                        log(
+                            'non-1080p detected: {0}'.format(entry),
+                            level='warn'
                         )
                 else:
-                    print('==> {0} does not match, searching...'.format(entry))
+                    log('{0} does not match, searching...'.format(entry))
 
                     guess = guessit.guessit(entry)
                     selection = search_tmdb(guess['title'])
@@ -154,7 +156,7 @@ def audit_movies():
 
                             os.rename(source_path, dest_path)
                         else:
-                            print('==> Failed to determine quality')
+                            log('Failed to determine quality', level='error')
 
         print('Finished!')
     else:

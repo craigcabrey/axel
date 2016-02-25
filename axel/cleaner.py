@@ -3,7 +3,7 @@ import textwrap
 import transmissionrpc
 
 from axel import config
-from axel import pb_notify
+from axel.util import pb_notify
 
 
 def clean():
