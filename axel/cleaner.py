@@ -16,7 +16,8 @@ def clean():
 
     time_threshold = config['transmission']['time_threshold']
     for torrent in torrents:
-        if torrent.status in ('seeding', 'stopped'):
+        if torrent.progress == 100.0 and \
+                torrent.status in ('seeding', 'stopped'):
             done = torrent.date_done
             diff = now - done
 
