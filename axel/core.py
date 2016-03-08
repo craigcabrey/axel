@@ -56,11 +56,17 @@ def extract(path, destination):
                 for member in rar.infolist():
                     if check_extension(member.filename):
                         paths.add(rar.extract(member, path=destination))
+
+                pb_notify(
+                    'Successfully unpacked rar archive: {0}'.format(file_path)
+                )
+
                 return paths
             else:
                 pb_notify('{0} failed the rar integrity check'.format(path))
         except unrar.unrarlib.UnrarException:
             pb_notify('Error while opening {0}'.format(path))
+    pb_notify('Failed to unpacked rar archive (not a rar): {0}'.format(path))
     return False
 
 
@@ -171,25 +177,31 @@ def move_episode(path, guess, move=True):
             pb_notify('Filebot skipped {0}: already exists'.format(path))
 
 
+def handle_couchpotato(torrent):
+    for index, file in torrent.files().items():
+        file_path = os.path.join(torrent.downloadDir, file['name'])
+        if file_path.endswith('rar'):
+            paths = extract(file_path, download_dir)
+
+            if paths:
+                for path in paths:
+                    guess = guessit.guessit(path)
+                    move_movie(path, guess)
+
+
 def handle_sonarr(torrent):
     for index, file in torrent.files().items():
         file_path = os.path.join(torrent.downloadDir, file['name'])
         if file_path.endswith('rar'):
-            download_dir = os.path.dirname(file_path)
-            paths = extract(file_path, download_dir)
+            with tempfile.TemporaryDirectory() as temp_dir:
+                paths = extract(file_path, temp_dir)
 
-            if paths:
-                pb_notify(
-                    'Successfully unpacked rar archive: {0}'.format(file_path)
-                )
-
-                # Move extracted files to sonarr drone factory
-                for path in paths:
-                    shutil.chown(path, group='plex')
-                    os.chmod(path, 0o664)
-                    shutil.move(path, drone_factory)
-            else:
-                pb_notify('Failed to unpacked rar archive: {0}'.format(path))
+                if paths:
+                    # Move extracted files to sonarr drone factory
+                    for path in paths:
+                        shutil.chown(path, group='plex')
+                        os.chmod(path, 0o664)
+                        shutil.move(path, drone_factory)
 
 
 def handle_manual(torrent):
@@ -270,8 +282,7 @@ def handle_finished_download():
 
     if couchpotato_category in torrent.downloadDir:
         if not ignore_couchpotato:
-            # TODO
-            pass
+            handle_couchpotato(torrent)
     elif sonarr_category in torrent.downloadDir:
         if not ignore_sonarr:
             handle_sonarr(torrent)
