@@ -136,7 +136,7 @@ def move_episode(path, guess, move=True):
 
         destination_path = os.path.join(
             season_path,
-            '{title} - s{season}e{episode} - {episode_title}.{container}'
+            '{title} - S{season}E{episode} - {episode_title}.{container}'
                 .format(
                     title=guess['title'],
                     season=str(guess['season']).zfill(2),
