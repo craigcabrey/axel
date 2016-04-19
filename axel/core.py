@@ -21,6 +21,8 @@ tv_dir = config['tv_dir']
 
 transmission_host = config['transmission']['host']
 transmission_port = config['transmission']['port']
+transmission_user = config['transmission']['user']
+transmission_password = config['transmission']['password']
 whitelist = config['transmission']['whitelist']
 
 couchpotato_category = config['couchpotato']['category']
@@ -41,7 +43,8 @@ def whitelisted(torrent):
 
 def update_blocklist():
     transmission_client = transmissionrpc.Client(
-        transmission_host, port=transmission_port
+        transmission_host, port=transmission_port, user=transmission_user,
+        password=transmission_password
     )
     transmission_client.blocklist_update()
 
@@ -271,7 +274,8 @@ def handle_finished_download():
     syslog.syslog('Beginning processing of torrent {0}'.format(torrent_id))
 
     transmission_client = transmissionrpc.Client(
-        transmission_host, port=transmission_port
+        transmission_host, port=transmission_port, user=transmission_user,
+        password=transmission_password
     )
     torrent = transmission_client.get_torrent(torrent_id)
 

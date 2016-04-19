@@ -8,7 +8,9 @@ from axel.util import pb_notify
 
 def clean():
     transmission_client = transmissionrpc.Client(
-        config['transmission']['host'], port=config['transmission']['port']
+        config['transmission']['host'], port=config['transmission']['port'],
+        user=config['transmission']['user'],
+        password=config['transmission']['password']
     )
 
     torrents = transmission_client.get_torrents()

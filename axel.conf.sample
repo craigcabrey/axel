@@ -23,6 +23,9 @@ Ignore=no
 [Transmission]
 Host=localhost
 Port=9091
+# If rpc-authenticated is required
+User=
+Password=
 # Comma separate list of hostnames
 Whitelist=
 # Time in days

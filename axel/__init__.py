@@ -35,6 +35,12 @@ config['transmission']['host'] = parser.get(
 config['transmission']['port'] = parser.get(
     'Transmission', 'Port', fallback=9091
 )
+config['transmission']['user'] = parser.get(
+    'Transmission', 'User', fallback=''
+)
+config['transmission']['password'] = parser.get(
+    'Transmission', 'Password', fallback=''
+)
 config['transmission']['whitelist'] = parser.get(
     'Transmission', 'Whitelist', fallback=''
 ).split(',')
