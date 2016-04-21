@@ -249,7 +249,7 @@ def handle_manual(torrent):
 
                 if paths:
                     for path in paths:
-                        shutil.chown(path, group='plex')
+                        shutil.chown(path, group=plex_group)
                         os.chmod(path, 0o664)
 
                         handle_media(path, True)
