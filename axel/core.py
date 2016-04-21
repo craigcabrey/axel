@@ -32,6 +32,8 @@ sonarr_category = config['sonarr']['category']
 ignore_sonarr = config['sonarr']['ignore']
 drone_factory = config['sonarr']['drone_factory']
 
+plex_group = config['group']
+
 
 def whitelisted(torrent):
     return any(
@@ -202,7 +204,7 @@ def handle_sonarr(torrent):
                 if paths:
                     # Move extracted files to sonarr drone factory
                     for path in paths:
-                        shutil.chown(path, group='plex')
+                        shutil.chown(path, group=plex_group)
                         os.chmod(path, 0o664)
                         shutil.move(path, drone_factory)
 
