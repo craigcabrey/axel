@@ -6,7 +6,7 @@ import guessit
 import tmdbsimple as tmdb
 
 from axel import config
-from axel.util import log
+from axel.util import check_extension, log
 
 
 def search_tmdb(query):
@@ -115,7 +115,7 @@ def audit_movies():
             for entry in os.listdir(movie_dir):
                 source_path = os.path.join(movie_dir, entry)
                 # Don't try to process subtitles, etc
-                if not entry.endswith('mkv'):
+                if not check_extension(entry):
                     continue
 
                 match = movie_format.match(entry)
