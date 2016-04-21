@@ -27,6 +27,9 @@ config['tv_dir'] = parser.get(
 config['tmdb_api_key'] = parser.get(
     'General', 'TheMovieDBAPIKey', fallback=''
 )
+config['group'] = parser.get(
+    'General', 'Group', fallback='plex'
+)
 
 config['transmission'] = {}
 config['transmission']['host'] = parser.get(

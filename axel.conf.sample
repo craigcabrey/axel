@@ -10,6 +10,8 @@ PushbulletChannel=
 MovieDirectory=
 # Required
 TVDirectory=
+# Group to chown files to
+Group=
 
 [CouchPotato]
 Category=couchpotato
