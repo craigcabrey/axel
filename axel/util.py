@@ -32,7 +32,7 @@ def pb_notify(message):
 
 
 def check_extension(filename):
-    return any(filename.endswith(ext) for ext in ('mkv', 'mp4'))
+    return any(filename.endswith(ext) for ext in config['media_file_extensions'])
 
 class Colors:
     HEADER = '\033[95m'

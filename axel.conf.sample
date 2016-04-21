@@ -12,6 +12,8 @@ MovieDirectory=
 TVDirectory=
 # Group to chown files to
 Group=
+# Comma separated list of media file extensions to process
+MediaFileExtensions=
 
 [CouchPotato]
 Category=couchpotato

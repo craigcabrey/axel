@@ -30,6 +30,9 @@ config['tmdb_api_key'] = parser.get(
 config['group'] = parser.get(
     'General', 'Group', fallback='plex'
 )
+config['media_file_extensions'] = parser.get(
+    'General', 'MediaFileExtensions', fallback='mkv,mp4'
+).split(',')
 
 config['transmission'] = {}
 config['transmission']['host'] = parser.get(
