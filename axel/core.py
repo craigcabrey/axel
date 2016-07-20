@@ -63,7 +63,7 @@ def extract(path, destination):
                         paths.add(rar.extract(member, path=destination))
 
                 pb_notify(
-                    'Successfully unpacked rar archive: {0}'.format(file_path)
+                    'Successfully unpacked rar archive: {0}'.format(path)
                 )
 
                 return paths
